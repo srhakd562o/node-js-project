@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BlogCareers</title>
+    <style>
+        body {
+            background-color: palevioletred;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            flex-direction: column;
+            padding: 20px;
+            margin: 0;
+        }
+        h1 {
+            margin-bottom: 20px;
+            align-self: center;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: white;
+            border: 1px solid black;
+            border-radius: 10px;
+            padding:1rem 2rem;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: 300px;
+            align-self: center;
+        }
+        #form-group1 {
+            width: 100%;
+        }
+        #form-group1 label, 
+        #form-group1 input {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        #button1 {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background-color: #0f912b;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #button1:hover {
+            background-color: #0056b3;
+        }
+        #posts {
+            width: 100%;
+            max-width: 800px;
+        }
+        .post-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: black;
+            border: 1px solid black;
+            border-radius: 10px;
+            padding: 1rem,2rem;
+            color: white;
+            margin-bottom: 10px;
+            margin-left:55%;
+        }
+        .post-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+        .comment-input {
+            width: 80%;
+            margin-top: 10px;
+            padding: 5px;
+            border-radius: 5px;
+        }
+        .comment-button {
+            margin-top: 10px;
+            padding: 5px 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .comment-button:hover {
+            background-color: #0056b3;
+        }
+        .comment {
+            width: 100%;
+            padding: 5px;
+            border-radius: 5px;
+            background-color: #333;
+            margin-top: 10px;
+        }
+        #pComment{
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Create A Post</h1>
+    <form id="form-group">
+        <input type="hidden" id="userId">
+        <div id="form-group1">
+            <label for="postLink">Post Link:</label>
+            <input id="postLink" type="text" required>
+            <label for="postDescription">Post Description:</label>
+            <input id="postDescription" type="text" name="postDescription" required>
+            <button type="button" id="button1">Create Post</button>
+        </div>
+    </form>
+    <h1>Posts</h1>
+    <br><br><br><br>
+    <div id="posts"></div>
+
+    <script>
+        document.getElementById('button1').addEventListener('click', addBlog);
+
+        function addBlog() {
+            const postLink = document.getElementById('postLink').value;
+            const postDescription = document.getElementById('postDescription').value;
+            const userId = document.getElementById('userId').value;
+
+            const method = userId ? 'PUT' : 'POST';
+            const url = userId ? `api/users/${userId}` : `api/posts`;
+
+            fetch(url, {
+                method,
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify({ postLink, postDescription })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Blog data added ', data);
+                fetchBlog();
+            })
+            .catch(error => {
+                console.error('Error on adding', error);
+            });
+        }
+
+        function fetchBlog() {
+            fetch('/api/posts')
+            .then(response => response.json())
+            .then(posts => {
+                const postsDiv = document.getElementById('posts');
+                postsDiv.innerHTML = '';
+
+                posts.forEach(post => {
+                    const postDiv = document.createElement('div');
+                    postDiv.classList.add('post-container');
+                    postDiv.innerHTML = `
+                        <img src="${post.postLink}" alt="Post Image">
+                        <p>User:- ${post.postDescription}</p>
+                        <p id="pComment"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRyQnwAHFqiJP7J4bZgU9dnQ4DDIyCFoSS6NNbeVRWhPHg9HqPMIXW1d4H5uY0wMBobDp8&usqp=CAU" style="max-width:10%; height:10%">
+                        <strong>Comment</strong></p>
+                        <input type="text" placeholder="Write your comment" class="comment-input">
+                        <button class="comment-button" onclick="addComment(this)">Send</button>`;
+                    postsDiv.appendChild(postDiv);
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching Posts:', error);
+            });
+        }
+
+        function addComment(button) {
+            const commentInput = button.previousElementSibling;
+            const comment = commentInput.value;
+            if (comment.trim() !== "") {
+                const commentDiv = document.createElement('div');
+                commentDiv.classList.add('comment');
+                const p = document.createElement('p');
+                p.textContent = 'Anonymous - ';
+                commentDiv.appendChild(p);      
+                const commentText = document.createElement('p');
+                commentText.textContent = comment;
+                commentDiv.appendChild(commentText);
+                button.parentElement.appendChild(commentDiv);
+                commentInput.value = '';
+            }
+        }
+
+        // Initial call to fetch posts
+        fetchBlog();
+    </script>
+</body>
+</html>
