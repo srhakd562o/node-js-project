@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Company Rating App</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+        .fa-star.checked {
+            color: green;
+        }
+        h1 {
+            text-align: center;
+            color: rgb(229, 71, 28);
+        }
+        body {
+            background-color: rgb(26, 25, 25);
+        }
+        label {
+            color: rgb(229, 71, 28);
+            padding: 1rem;
+        }
+        input{
+            margin-left: 2%;
+            padding: 0.6rem 3rem;
+            
+        }
+        textarea {
+            margin-left: 2%;
+            margin-top: 0.5%;
+            padding: 2rem 4rem;
+        }
+        .stars-container {
+            display: block;
+            color: white;
+            padding: 0.5rem;
+            margin-left: 2%;
+            margin-top: 0.5%;
+        }
+        #button1, #searchButton {
+            padding: 0.5rem 0.5rem;
+            margin-left: 1%;
+            margin-top: 0.5%;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        #button1 {
+            background-color: red;
+        }
+        #button1:hover {
+            background-color: darkred;
+            transform: scale(1.05);
+        }
+        #searchButton {
+            background-color: rgb(12, 170, 46);
+        }
+        #searchCompany {
+            padding: 0.6rem 3rem;
+        }
+        #searchElement {
+            margin-left: 60%;
+        }
+        .company-info {
+            margin-left:40%;
+            margin-top: 1rem;
+            color: white;
+        }
+        .company-details {
+            padding: 1rem;
+            margin-left:20%;
+            margin-bottom: 1rem;
+        }
+        .company-details h1 {
+            color: yellow;
+        }
+        .company-rating {
+            color: rgb(90, 128, 0);
+        }
+        #reviewName{
+            
+            margin-left:2%;
+            font-size: 2rem;
+            color:greenyellow;
+        }
+        #companyRating{
+            margin-left:2%;
+            font-size: 2rem;
+            color:yellow;
+        }
+        #companyh1{
+            color:orangered;
+        }
+    </style>
+</head>
+<body>
+    <h1 id="heading-1">Add A Review</h1>
+    <form>
+        <input type="hidden" id="companyId">
+        <div id="container">
+            <label for="companyName">Company Name:</label>
+            <br>
+            <input type="text" name="companyName" id="companyName" required>
+            <br>
+            <label for="companyPros">Pros:</label>
+            <br>
+            <textarea name="companyPros" id="companyPros" required></textarea>
+            <br>
+            <label for="companyCons">Cons:</label>
+            <br>
+            <textarea name="companyCons" id="companyCons" required></textarea>
+            <br><br>
+            <label for="companyRating">Rating:</label>
+            <br>
+            <div class="stars-container">
+                <span class="fa fa-star" data-rating="1"></span>
+                <span class="fa fa-star" data-rating="2"></span>
+                <span class="fa fa-star" data-rating="3"></span>
+                <span class="fa fa-star" data-rating="4"></span>
+                <span class="fa fa-star" data-rating="5"></span>
+            </div>
+            <input type="hidden" id="companyRating" name="companyRating" required>
+            <br>
+        </div>
+        <button id="button1">Submit Review</button>
+        <br><br>
+    </form>
+    <div id="searchElement">
+        <input id="searchCompany" type="text" placeholder="Search for company">
+        <button id="searchButton" type="submit">Submit</button>
+    </div>
+    <div id="showReview"></div>
+
+    <script>
+        // Handle star rating
+        document.querySelectorAll('.fa-star').forEach(star => {
+            star.addEventListener('click', function() {
+                let rating = this.getAttribute('data-rating');
+                document.getElementById('companyRating').value = rating;
+                document.querySelectorAll('.fa-star').forEach(s => {
+                    s.classList.remove('checked');
+                });
+                this.classList.add('checked');
+                let prevSibling = this.previousElementSibling;
+                while (prevSibling) {
+                    prevSibling.classList.add('checked');
+                    prevSibling = prevSibling.previousElementSibling;
+                }
+            });
+        });
+
+        // Handle form submission
+        document.querySelector('form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const companyId = document.getElementById('companyId').value;
+            const companyData = {
+                companyName: document.getElementById('companyName').value,
+                companyPros: document.getElementById('companyPros').value,
+                companyCons: document.getElementById('companyCons').value,
+                companyRating: document.getElementById('companyRating').value
+            };
+
+            const url = companyId ? `api/companies/${companyId}` : `/api/companies`;
+            const method = companyId ? 'PUT' : 'POST';
+
+            fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(companyData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                alert('Company Information saved successfully');
+                document.querySelector('form').reset();
+                document.getElementById('companyId').value = '';
+                document.querySelectorAll('.fa-star').forEach(s => {
+                    s.classList.remove('checked');
+                });
+            })
+            .catch(error => {
+                alert('Failed to save company review');
+                console.error('Error:', error);
+            });
+        });
+
+        // Handle company search
+        document.getElementById('searchButton').addEventListener('click', function() {
+            const query = document.getElementById('searchCompany').value.toLowerCase();
+            const resultsDiv = document.getElementById('showReview');
+            resultsDiv.innerHTML = '';
+
+            fetch('/api/companies')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(companies => {
+                const filteredCompanies = companies.filter(company => company.companyName.toLowerCase().includes(query));
+
+                if (filteredCompanies.length === 0) {
+                    resultsDiv.innerHTML = '<p>No company found</p>';
+                } else {
+                    filteredCompanies.forEach(company => {
+                        const companyDiv = document.createElement('div');
+                        companyDiv.classList.add('company-info');
+                        companyDiv.innerHTML = `
+                            <div class="company-details">
+                                <h1 id ="companyh1">Company Reviews</h1>
+                                <p id="reviewName">Company Name:${company.companyName}</p>
+                                <p id="companyRating">Company Rating:${company.companyRating}</p>
+                                <strong>Pros:</strong>
+                                <br>
+                                <p>${company.companyPros}</p>
+                                <strong>Cons:</strong>
+                                <br>
+                                <p>${company.companyCons}</p>
+                                <p><strong>Rating:</strong>${getStars(company.companyRating)}</p>
+                                <hr>
+                            </div>
+                        `;
+                        resultsDiv.appendChild(companyDiv);
+                    });
+                }
+            })
+            .catch(error => {
+                resultsDiv.innerHTML = '<p>Failed to load companies</p>';
+                console.error('Error:', error);
+            });
+        });
+
+        // Function to generate star ratings
+        function getStars(rating) {
+            let stars = '';
+            for (let i = 1; i <= 5; i++) {
+                if (i <= rating) {
+                    stars += '<span class="fa fa-star checked"></span>';
+                } else {
+                    stars += '<span class="fa fa-star"></span>';
+                }
+            }
+            return stars;
+        }
+    </script>
+</body>
+</html>
