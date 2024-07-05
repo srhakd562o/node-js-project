@@ -2,8 +2,8 @@ const express = require('express');
 const path = require('path');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const sequelize = require('./util/postdatabase');
-const postRoutes = require('./routes/postRoutes');
+const sequelize = require('./models/index');
+const postRoutes = require('./routes/reviewRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -16,7 +16,7 @@ app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Routes
-app.use('/api/posts', postRoutes);
+app.use('/api', postRoutes);
 
 // Catch all other routes and return index.html
 app.get('*', (req, res) => {
@@ -24,7 +24,7 @@ app.get('*', (req, res) => {
 });
 
 // Sync all models with the database
-sequelize.sync()
+sequelize.sequelize.sync()  
     .then(() => {
         console.log('Database synchronized');
         // Start the server
